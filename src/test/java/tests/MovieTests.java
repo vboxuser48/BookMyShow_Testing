@@ -9,38 +9,38 @@ import pages.CityPage;
 import pages.MoviePage;
 
 public class MovieTests {
-    private MoviePage moviePage;
+    private MoviePage movieHandler;
 
     @BeforeClass
-    public void setUp() {
+    public void setup() {
         DriverSetup.initDriver();
-        CityPage cityPage = new CityPage();
-        boolean citySelected = cityPage.selectCity("Mumbai");
-        Assert.assertTrue(citySelected, "❌ Failed to select city before starting movie tests.");
-        moviePage = new MoviePage();
+        CityPage cityHandler = new CityPage();
+        boolean citySelected = cityHandler.chooseCity("Mumbai");
+        Assert.assertTrue(citySelected, "Failed to select city before starting movie tests.");
+        movieHandler = new MoviePage();
     }
 
     @Test(priority = 1)
-    public void testValidateComingSoonSection() {
-        moviePage.ensureOnMoviesPage();
-        boolean isDisplayed = moviePage.validateComingSoonSection();
-        Assert.assertTrue(isDisplayed, "❌ 'Coming Soon' section should be visible.");
+    public void testComingSoonSection() {
+        movieHandler.ensureMoviesPage();
+        boolean visible = movieHandler.checkComingSoon();
+        Assert.assertTrue(visible, "'Coming Soon' section should be visible.");
     }
 
     @Test(priority = 2)
-    public void testExploreUpcomingMovies() {
-        moviePage.ensureOnMoviesPage();
-        moviePage.exploreUpcomingMovies();
-        Assert.assertFalse(moviePage.isCloudflareBlocked(),
-                "❌ Blocked by Cloudflare while exploring upcoming movies!");
+    public void testUpcomingMoviesNavigation() {
+        movieHandler.ensureMoviesPage();
+        movieHandler.viewUpcomingMovies();
+        Assert.assertFalse(movieHandler.isBlockedByCloudflare(),
+                "Blocked by Cloudflare while exploring upcoming movies!");
     }
 
-    @Test(priority = 3)  // 👈 runs last to avoid breaking other tests
-    public void testSelectRunningMovie() {
-        moviePage.ensureOnMoviesPage();
-        moviePage.selectRunningMovie();
-        Assert.assertFalse(moviePage.isCloudflareBlocked(),
-                "❌ Blocked by Cloudflare while selecting running movie!");
+    @Test(priority = 3)
+    public void testSelectFirstMovie() {
+        movieHandler.ensureMoviesPage();
+        movieHandler.selectFirstMovie();
+        Assert.assertFalse(movieHandler.isBlockedByCloudflare(),
+                "Blocked by Cloudflare while selecting running movie!");
     }
 
     @AfterClass

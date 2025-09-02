@@ -9,28 +9,26 @@ import utils.WaitUtils;
 import java.util.List;
 
 public class LoginPage {
-    private final WebDriver driver;
+    private final WebDriver webDriver;
     private final int DEFAULT_TIMEOUT = 12;
 
     public LoginPage() {
-        this.driver = DriverSetup.getDriver();
-        PageFactory.initElements(driver, this);
-        System.out.println("✅ LoginPage initialized.");
+        this.webDriver = DriverSetup.getDriver();
+        PageFactory.initElements(webDriver, this);
+        System.out.println("LoginPage initialized.");
     }
 
-    /** Safe click with JS fallback */
-    private void safeClick(By locator) {
+    private void performClick(By locator) {
         try {
             WaitUtils.clickable(locator, DEFAULT_TIMEOUT).click();
         } catch (Exception e) {
-            System.out.println("⚠️ Normal click failed, retrying with JS...");
-            WebElement el = driver.findElement(locator);
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+            System.out.println("Normal click failed, retrying with JS...");
+            WebElement element = webDriver.findElement(locator);
+            ((JavascriptExecutor) webDriver).executeScript("arguments[0].click();", element);
         }
     }
 
-    /** Type like a human */
-    private void typeSlowly(WebElement element, String text) {
+    private void enterTextSlowly(WebElement element, String text) {
         if (element == null || text == null) return;
         for (char c : text.toCharArray()) {
             element.sendKeys(Character.toString(c));
@@ -42,47 +40,41 @@ public class LoginPage {
         }
     }
 
-    /** 🚨 Invalid login */
-    public boolean signInInvalid(String invalidMobile) {
+    public boolean attemptInvalidLogin(String mobile) {
         try {
-            System.out.println("➡️ signInInvalid: starting...");
+            System.out.println("Starting invalid login test...");
+            performClick(LocatorRepository.get("signInBtn"));
 
-            safeClick(LocatorRepository.get("signInBtn"));
+            WebElement inputBox = WaitUtils.visible(LocatorRepository.get("mobileNumberBox"), DEFAULT_TIMEOUT);
+            inputBox.clear();
+            enterTextSlowly(inputBox, mobile);
 
-            WebElement mobileBox = WaitUtils.visible(LocatorRepository.get("mobileNumberBox"), DEFAULT_TIMEOUT);
-            mobileBox.clear();
-            typeSlowly(mobileBox, invalidMobile);
+            performClick(LocatorRepository.get("continueBtn"));
 
-            safeClick(LocatorRepository.get("continueBtn"));
-
-            // actual error div you provided
             By errorLocator = By.xpath("//div[contains(@class,'sc-z1ldnh-12') and text()='Invalid mobile number']");
             WebElement errorMsg = WaitUtils.visible(errorLocator, DEFAULT_TIMEOUT);
 
             return errorMsg != null && errorMsg.isDisplayed();
         } catch (Exception e) {
-            System.err.println("❌ signInInvalid failed → " + e.getMessage());
+            System.err.println("Invalid login failed → " + e.getMessage());
             return false;
         }
     }
 
-    /** 🔐 Valid login (mobile + OTP) */
-    public boolean validSignIn(String validMobile, String otp) {
+    public boolean attemptValidLogin(String mobile, String otp) {
         try {
-            System.out.println("➡️ validSignIn: starting...");
+            System.out.println("Starting valid login test...");
+            performClick(LocatorRepository.get("signInBtn"));
 
-            safeClick(LocatorRepository.get("signInBtn"));
+            WebElement inputBox = WaitUtils.visible(LocatorRepository.get("mobileNumberBox"), DEFAULT_TIMEOUT);
+            inputBox.clear();
+            enterTextSlowly(inputBox, mobile);
 
-            WebElement mobileBox = WaitUtils.visible(LocatorRepository.get("mobileNumberBox"), DEFAULT_TIMEOUT);
-            mobileBox.clear();
-            typeSlowly(mobileBox, validMobile);
+            performClick(LocatorRepository.get("continueBtn"));
 
-            safeClick(LocatorRepository.get("continueBtn"));
-
-            // wait for OTP fields
-            List<WebElement> otpInputs = driver.findElements(LocatorRepository.get("otpInputs"));
+            List<WebElement> otpInputs = webDriver.findElements(LocatorRepository.get("otpInputs"));
             if (otpInputs.isEmpty()) {
-                System.out.println("⚠️ OTP fields not found.");
+                System.out.println("OTP fields not found.");
                 return false;
             }
 
@@ -90,17 +82,16 @@ public class LoginPage {
                 otpInputs.get(i).sendKeys(String.valueOf(otp.charAt(i)));
             }
 
-            System.out.println("✅ OTP entered.");
+            System.out.println("OTP entered successfully.");
             return true;
         } catch (Exception e) {
-            System.err.println("❌ validSignIn failed → " + e.getMessage());
+            System.err.println("Valid login failed → " + e.getMessage());
             return false;
         }
     }
 
-    /** 🔍 Verify UI */
-    public boolean verifyUI(String validMobile, String otp) {
-        System.out.println("🔎 Checking Sign In UI...");
-        return validSignIn(validMobile, otp);
+    public boolean verifyLoginUI(String mobile, String otp) {
+        System.out.println("Checking Sign In UI...");
+        return attemptValidLogin(mobile, otp);
     }
 }

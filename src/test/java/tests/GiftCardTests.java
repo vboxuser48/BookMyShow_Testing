@@ -8,34 +8,32 @@ import pages.CityPage;
 import pages.GiftCardPage;
 
 public class GiftCardTests {
-    private GiftCardPage giftCardPage;
-    private CityPage cityPage;
+    private GiftCardPage giftHandler;
+    private CityPage cityHandler;
 
     @BeforeClass
     public void setup() {
         DriverSetup.initDriver();
-        giftCardPage = new GiftCardPage();
-        cityPage = new CityPage();
-
-        // ✅ Ensure we select a city before going to Gift Card section
-        cityPage.selectCity("Bengaluru");
+        giftHandler = new GiftCardPage();
+        cityHandler = new CityPage();
+        cityHandler.chooseCity("Bengaluru");
     }
 
     @Test(priority = 1)
-    public void testGiftCardSectionAndBalanceIcon() {
-        boolean visible = giftCardPage.openGiftCardsAndValidateCheckBalanceVisible();
-        System.out.println(visible
-                ? "✅ Gift Card section opened and icon validated."
-                : "❌ Could not validate Gift Card section.");
+    public void testGiftCardSection() {
+        boolean result = giftHandler.openGiftCardsAndVerifyBalance();
+        System.out.println(result
+                ? "Gift Card section opened and balance icon visible."
+                : "Could not validate Gift Card section.");
     }
 
     @Test(priority = 2)
-    public void testInvalidVoucherBalance() {
-        String errorMsg = giftCardPage.checkInvalidVoucherAndGetError("INVALID123");
-        if (errorMsg != null) {
-            System.out.println("✅ Error message captured successfully: " + errorMsg);
+    public void testInvalidVoucherError() {
+        String errorMessage = giftHandler.enterInvalidVoucherAndFetchError("INVALID123");
+        if (errorMessage != null) {
+            System.out.println("Error message captured: " + errorMessage);
         } else {
-            System.out.println("❌ No error message found for invalid voucher.");
+            System.out.println("No error message found for invalid voucher.");
         }
     }
 

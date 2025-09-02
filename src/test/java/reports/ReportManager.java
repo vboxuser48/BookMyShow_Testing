@@ -6,10 +6,9 @@ import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 public class ReportManager {
     private static ExtentReports extent;
 
-    // Singleton pattern - one report instance for all tests
     public static ExtentReports getInstance() {
         if (extent == null) {
-            String reportPath = System.getProperty("user.dir") + "/test-output/ExtentReport.html";
+            String reportPath = System.getProperty("user.dir") + "/test-output/Report.html";
             ExtentSparkReporter reporter = new ExtentSparkReporter(reportPath);
 
             reporter.config().setReportName("BookMyShow Automation Report");
@@ -18,7 +17,6 @@ public class ReportManager {
             extent = new ExtentReports();
             extent.attachReporter(reporter);
 
-            // Add dynamic system info
             extent.setSystemInfo("Tester", "Abhay Chauhan");
             extent.setSystemInfo("Environment", "QA");
             extent.setSystemInfo("Application", "BookMyShow");

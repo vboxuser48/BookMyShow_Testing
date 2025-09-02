@@ -10,133 +10,124 @@ import utils.WaitUtils;
 import java.time.Duration;
 
 public class CityPage {
-    private final WebDriver driver;
+    private final WebDriver webDriver;
 
     public CityPage() {
-        this.driver = DriverSetup.getDriver();
-        System.out.println("✅ CityPage initialized with WebDriver instance.");
+        this.webDriver = DriverSetup.getDriver();
+        System.out.println("CityPage initialized with WebDriver.");
     }
 
-    // ✅ Utility: safe click (handles overlay + fallback to JS)
-    private void safeClick(WebElement element) {
+    private void performClick(WebElement element) {
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(5))
+            new WebDriverWait(webDriver, Duration.ofSeconds(5))
                     .until(ExpectedConditions.elementToBeClickable(element));
             element.click();
         } catch (Exception e) {
-            System.out.println("⚠️ Normal click failed, retrying with JS click...");
-            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+            System.out.println("Normal click failed, trying JS click...");
+            ((JavascriptExecutor) webDriver).executeScript("arguments[0].scrollIntoView(true);", element);
+            ((JavascriptExecutor) webDriver).executeScript("arguments[0].click();", element);
         }
     }
 
-    // ✅ Utility: close popup overlay if present
-    private void closePopupIfPresent() {
+    private void dismissPopup() {
         try {
-            WebElement popup = driver.findElement(LocatorRepository.get("popupClose"));
-            if (popup.isDisplayed()) {
-                popup.click();
-                new WebDriverWait(driver, Duration.ofSeconds(5))
-                        .until(ExpectedConditions.invisibilityOf(popup));
-                System.out.println("↩️ Closed blocking popup overlay.");
+            WebElement popupElement = webDriver.findElement(LocatorRepository.get("popupClose"));
+            if (popupElement.isDisplayed()) {
+                popupElement.click();
+                new WebDriverWait(webDriver, Duration.ofSeconds(5))
+                        .until(ExpectedConditions.invisibilityOf(popupElement));
+                System.out.println("Closed popup overlay.");
             }
         } catch (Exception ignored) {}
     }
 
-    // ✅ Select city (works with suggestion or popular city)
-    public boolean selectCity(String cityName) {
+    public boolean chooseCity(String city) {
         try {
-            System.out.println("🌆 Attempting to select city: " + cityName);
-            closePopupIfPresent();
+            System.out.println("Attempting to select city: " + city);
+            dismissPopup();
 
-            WebElement currentCity = driver.findElement(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"));
-            safeClick(currentCity);
+            WebElement currentCityElement = webDriver.findElement(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"));
+            performClick(currentCityElement);
 
-            WebElement cityInput = WaitUtils.visible(LocatorRepository.get("cityInput"), 10);
-            cityInput.clear();
-            cityInput.sendKeys(cityName);
+            WebElement inputBox = WaitUtils.visible(LocatorRepository.get("cityInput"), 10);
+            inputBox.clear();
+            inputBox.sendKeys(city);
 
-            WebElement suggestion = WaitUtils.clickable(By.xpath("//p[contains(text(),'" + cityName + "')]"), 10);
-            safeClick(suggestion);
+            WebElement suggestionElement = WaitUtils.clickable(By.xpath("//p[contains(text(),'" + city + "')]"), 10);
+            performClick(suggestionElement);
 
-            System.out.println("✅ City selection successful: " + cityName);
+            System.out.println("City selected: " + city);
             return true;
         } catch (Exception e) {
-            System.out.println("❌ Failed to select city: " + e.getMessage());
+            System.out.println("Failed to select city: " + e.getMessage());
             return false;
         }
     }
 
-    // ✅ Change city
-    public boolean changeLocation(String cityName) {
+    public boolean updateLocation(String city) {
         try {
-            System.out.println("🌍 Changing city to: " + cityName);
-            closePopupIfPresent();
+            System.out.println("Changing city to: " + city);
+            dismissPopup();
 
-            WebElement currentCity = WaitUtils.clickable(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"), 10);
-            safeClick(currentCity);
+            WebElement currentCityElement = WaitUtils.clickable(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"), 10);
+            performClick(currentCityElement);
 
-            WebElement cityInput = WaitUtils.visible(LocatorRepository.get("cityInput"), 10);
-            cityInput.clear();
-            cityInput.sendKeys(cityName);
+            WebElement inputBox = WaitUtils.visible(LocatorRepository.get("cityInput"), 10);
+            inputBox.clear();
+            inputBox.sendKeys(city);
 
-            WebElement suggestion = WaitUtils.clickable(By.xpath("//p[contains(text(),'" + cityName + "')]"), 10);
-            safeClick(suggestion);
+            WebElement suggestionElement = WaitUtils.clickable(By.xpath("//p[contains(text(),'" + city + "')]"), 10);
+            performClick(suggestionElement);
 
-            System.out.println("✅ Changed city to: " + cityName);
+            System.out.println("City changed to: " + city);
             return true;
         } catch (Exception e) {
-            System.out.println("❌ Failed to change city: " + e.getMessage());
+            System.out.println("Failed to change city: " + e.getMessage());
             return false;
         }
     }
 
-    // ✅ Select city by Popular City icon (works with Delhi-NCR too)
-    public boolean selectCityByIcon(String cityName) {
+    public boolean chooseCityByIcon(String city) {
         try {
-            System.out.println("🌆 Selecting city by icon: " + cityName);
-            closePopupIfPresent();
+            System.out.println("Selecting city by icon: " + city);
+            dismissPopup();
 
-            WebElement currentCity = WaitUtils.clickable(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"), 10);
-            safeClick(currentCity);
+            WebElement currentCityElement = WaitUtils.clickable(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"), 10);
+            performClick(currentCityElement);
 
-            // Flexible locator (handles Delhi / Delhi-NCR)
-            WebElement icon = WaitUtils.clickable(By.xpath("//p[contains(text(),'" + cityName + "')]"), 10);
-            safeClick(icon);
+            WebElement iconElement = WaitUtils.clickable(By.xpath("//p[contains(text(),'" + city + "')]"), 10);
+            performClick(iconElement);
 
-            System.out.println("✅ City icon selected: " + cityName);
+            System.out.println("City icon selected: " + city);
             return true;
         } catch (Exception e) {
-            System.out.println("❌ City icon not found: " + cityName + " → " + e.getMessage());
+            System.out.println("City icon not found: " + city + " → " + e.getMessage());
             return false;
         }
     }
 
-    // ✅ Toggle "View All Cities"
-    public boolean viewAllCitiesToggle() {
+    public boolean expandAllCities() {
         try {
-            System.out.println("🌍 Attempting to toggle 'View All Cities'...");
-            closePopupIfPresent();
+            System.out.println("Attempting to expand 'View All Cities'...");
+            dismissPopup();
 
-            WebElement currentCity = WaitUtils.clickable(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"), 10);
-            safeClick(currentCity);
+            WebElement currentCityElement = WaitUtils.clickable(By.xpath("//span[contains(@class,'sc-1or3vea-16')]"), 10);
+            performClick(currentCityElement);
 
-            // If already expanded, skip clicking
-            boolean alreadyExpanded = !driver.findElements(LocatorRepository.get("cityList")).isEmpty();
+            boolean alreadyExpanded = !webDriver.findElements(LocatorRepository.get("cityList")).isEmpty();
             if (alreadyExpanded) {
-                System.out.println("ℹ️ 'View All Cities' already expanded.");
+                System.out.println("'View All Cities' already expanded.");
                 return true;
             }
 
-            // Else expand
-            WebElement toggle = WaitUtils.clickable(LocatorRepository.get("allCities"), 10);
-            safeClick(toggle);
+            WebElement toggleElement = WaitUtils.clickable(LocatorRepository.get("allCities"), 10);
+            performClick(toggleElement);
 
             WaitUtils.visible(LocatorRepository.get("cityList"), 10);
-            System.out.println("✅ 'View All Cities' expanded successfully.");
+            System.out.println("'View All Cities' expanded successfully.");
             return true;
         } catch (Exception e) {
-            System.out.println("❌ Failed to toggle 'View All Cities': " + e.getMessage());
+            System.out.println("Failed to expand 'View All Cities': " + e.getMessage());
             return false;
         }
     }

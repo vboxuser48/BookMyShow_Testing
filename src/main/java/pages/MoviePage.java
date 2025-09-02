@@ -12,104 +12,95 @@ import java.io.IOException;
 import java.time.Duration;
 
 public class MoviePage {
-    private final WebDriver driver;
-    private final WebDriverWait wait;
+    private final WebDriver webDriver;
+    private final WebDriverWait webWait;
 
     public MoviePage() {
-        this.driver = DriverSetup.getDriver();
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        System.out.println("✅ MoviePage initialized with WebDriver instance.");
+        this.webDriver = DriverSetup.getDriver();
+        this.webWait = new WebDriverWait(webDriver, Duration.ofSeconds(15));
+        System.out.println("MoviePage initialized with WebDriver.");
     }
 
-    // ---------- Utility: Safe click ----------
-    private void safeClick(WebElement element) {
+    private void performClick(WebElement element) {
         try {
-            wait.until(ExpectedConditions.elementToBeClickable(element));
+            webWait.until(ExpectedConditions.elementToBeClickable(element));
             element.click();
         } catch (Exception e) {
-            System.out.println("⚠️ Normal click failed, retrying with JS...");
-            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+            System.out.println("Normal click failed, retrying with JS...");
+            ((JavascriptExecutor) webDriver).executeScript("arguments[0].scrollIntoView(true);", element);
+            ((JavascriptExecutor) webDriver).executeScript("arguments[0].click();", element);
         }
     }
 
-    // ---------- Utility: Cloudflare detection ----------
-    public boolean isCloudflareBlocked() {
+    public boolean isBlockedByCloudflare() {
         try {
-            return driver.getPageSource().contains("Sorry, you have been blocked");
+            return webDriver.getPageSource().contains("Sorry, you have been blocked");
         } catch (Exception e) {
             return false;
         }
     }
 
-    // ---------- Utility: Log page source if blocked ----------
-    private void logPageSource(String fileName) {
+    private void savePageSource(String fileName) {
         try (FileWriter writer = new FileWriter(fileName)) {
-            writer.write(driver.getPageSource());
-            System.out.println("📄 Page source logged: " + fileName);
+            writer.write(webDriver.getPageSource());
+            System.out.println("Page source logged: " + fileName);
         } catch (IOException e) {
-            System.out.println("❌ Failed to write page source: " + e.getMessage());
+            System.out.println("Failed to write page source: " + e.getMessage());
         }
     }
 
-    // ---------- Go to Movies page ----------
-    public void goToMoviesPage() {
+    public void openMoviesPage() {
         WebElement moviesTab = WaitUtils.clickable(LocatorRepository.get("moviesTab"), 15);
-        safeClick(moviesTab);
-        wait.until(ExpectedConditions.presenceOfElementLocated(LocatorRepository.get("movieTile")));
-        System.out.println("🎬 Movies page loaded.");
+        performClick(moviesTab);
+        webWait.until(ExpectedConditions.presenceOfElementLocated(LocatorRepository.get("movieTile")));
+        System.out.println("Movies page loaded.");
     }
 
-    // ---------- Ensure we are on Movies page ----------
-    public void ensureOnMoviesPage() {
+    public void ensureMoviesPage() {
         try {
-            if (!driver.getCurrentUrl().contains("/movies")) {
-                goToMoviesPage();
+            if (!webDriver.getCurrentUrl().contains("/movies")) {
+                openMoviesPage();
             }
         } catch (Exception e) {
-            goToMoviesPage();
+            openMoviesPage();
         }
     }
 
-    // ---------- Select first running movie ----------
-    public void selectRunningMovie() {
-        ensureOnMoviesPage();
+    public void selectFirstMovie() {
+        ensureMoviesPage();
         WebElement firstMovie = WaitUtils.clickable(LocatorRepository.get("movieTile"), 15);
-        safeClick(firstMovie);
-        System.out.println("✅ Opened first running movie.");
-        if (isCloudflareBlocked()) logPageSource("cloudflare_block_runningMovie.html");
+        performClick(firstMovie);
+        System.out.println("Opened first running movie.");
+        if (isBlockedByCloudflare()) savePageSource("cloudflare_block_runningMovie.html");
     }
 
-    // ---------- Open specific movie by name ----------
-    public void openMovieByName(String movieName) {
-        ensureOnMoviesPage();
-        By movieLocator = By.xpath(String.format("//a[starts-with(@href,'/movies/') and normalize-space(text())='%s']", movieName));
-        WebElement movie = WaitUtils.clickable(movieLocator, 15);
-        safeClick(movie);
-        System.out.println("✅ Opened movie: " + movieName);
-        if (isCloudflareBlocked()) logPageSource("cloudflare_block_movieByName.html");
+    public void openMovie(String movieName) {
+        ensureMoviesPage();
+        By locator = By.xpath(String.format("//a[starts-with(@href,'/movies/') and normalize-space(text())='%s']", movieName));
+        WebElement movie = WaitUtils.clickable(locator, 15);
+        performClick(movie);
+        System.out.println("Opened movie: " + movieName);
+        if (isBlockedByCloudflare()) savePageSource("cloudflare_block_movieByName.html");
     }
 
-    // ---------- Validate Coming Soon section ----------
-    public boolean validateComingSoonSection() {
-        ensureOnMoviesPage();
+    public boolean checkComingSoon() {
+        ensureMoviesPage();
         try {
-            WebElement comingSoon = WaitUtils.visible(LocatorRepository.get("comingSoonSection"), 15);
-            boolean displayed = comingSoon.isDisplayed();
-            System.out.println("✅ 'Coming Soon' section is visible.");
-            return displayed;
+            WebElement section = WaitUtils.visible(LocatorRepository.get("comingSoonSection"), 15);
+            boolean visible = section.isDisplayed();
+            System.out.println("'Coming Soon' section is visible.");
+            return visible;
         } catch (Exception e) {
-            System.out.println("❌ 'Coming Soon' section not found.");
+            System.out.println("'Coming Soon' section not found.");
             return false;
         }
     }
 
-    // ---------- Explore Upcoming Movies ----------
-    public void exploreUpcomingMovies() {
-        ensureOnMoviesPage();
+    public void viewUpcomingMovies() {
+        ensureMoviesPage();
         WebElement upcoming = WaitUtils.clickable(LocatorRepository.get("exploreUpcomingMovies"), 15);
-        safeClick(upcoming);
-        System.out.println("✅ Navigated to Upcoming Movies.");
-        if (isCloudflareBlocked()) logPageSource("cloudflare_block_upcoming.html");
+        performClick(upcoming);
+        System.out.println("Navigated to Upcoming Movies.");
+        if (isBlockedByCloudflare()) savePageSource("cloudflare_block_upcoming.html");
     }
 }
