@@ -1,0 +1,15 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="BookMyShow Automation Suite">
+    <listeners>
+        <listener class-name="reports.ReportListener"/>
+    </listeners>
+
+    <test name="Regression Tests">
+        <classes>
+            <class name="tests.LoginTests"/>
+            <class name="tests.CityTests"/>
+            <class name="tests.MovieTests"/>
+            <class name="tests.GiftCardTests"/>
+        </classes>
+    </test>
+</suite>
