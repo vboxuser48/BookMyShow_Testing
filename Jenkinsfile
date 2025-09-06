@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo "Code started in docker"
@@ -25,7 +26,10 @@ pipeline {
 
                     // Run Maven tests inside Maven+Chrome container
                     bat """
-                      docker run --rm -u 0:0 -v ${hostPath}:/workspace -w /workspace markhobson/maven-chrome sh -c "rm -rf /home/seluser/.config/google-chrome /tmp/.com.google.Chrome* /tmp/.org.chromium* || true && chmod -R 777 /workspace && mvn -B -DforkCount=1 -DreuseForks=false -Dparallel=none clean test"
+                      docker run --rm -u 0:0 -v ${hostPath}:/workspace -w /workspace markhobson/maven-chrome ^
+                      sh -c "mkdir -p /workspace/test-output && chmod -R 777 /workspace/test-output && \
+                      rm -rf /home/seluser/.config/google-chrome /tmp/.com.google.Chrome* /tmp/.org.chromium* || true && \
+                      mvn -B -DforkCount=1 -DreuseForks=false -Dparallel=none clean test"
                     """
                 }
             }
@@ -33,18 +37,30 @@ pipeline {
 
         stage('Report') {
             steps {
-                // Surefire test reports
+                // JUnit test results
                 junit 'target/surefire-reports/*.xml'
 
-                // Extent Report (Extent writes to test-output/Report.html)
+                // Publish Extent Report (from target/ and test-output/)
                 publishHTML([
-                    allowMissing: false,
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'target',
+                    reportFiles: 'ExtentReport.html',
+                    reportName: 'Extent Report (target)'
+                ])
+
+                publishHTML([
+                    allowMissing: true,
                     alwaysLinkToLastBuild: true,
                     keepAll: true,
                     reportDir: 'test-output',
                     reportFiles: 'Report.html',
-                    reportName: 'Extent Report'
+                    reportName: 'Extent Report (test-output)'
                 ])
+
+                // Archive artifacts for download
+                archiveArtifacts artifacts: 'target/**/*.html, test-output/**/*.html', fingerprint: true
             }
         }
     }
