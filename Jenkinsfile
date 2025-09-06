@@ -12,7 +12,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 script {
-                    // Convert Windows workspace path (C:\...) -> Linux (/c/...) for Docker
+                    // Convert Windows path (C:\...) -> Linux path (/c/...) for Docker mount
                     def hostPath = env.WORKSPACE
                     if (!isUnix()) {
                         hostPath = hostPath.replaceAll('\\\\','/')
@@ -21,12 +21,11 @@ pipeline {
                             hostPath = "/${drive}${hostPath.substring(2)}"
                         }
                     }
-
                     echo "Using hostPath for docker: ${hostPath}"
 
-                    // Run Maven inside container
+                    // Run Maven tests inside Maven+Chrome container
                     bat """
-                      docker run --rm -v ${hostPath}:/workspace -w /workspace maven:3.9.6-eclipse-temurin-17 mvn -B clean test
+                      docker run --rm -v ${hostPath}:/workspace -w /workspace markhobson/maven-chrome mvn -B clean test
                     """
                 }
             }
