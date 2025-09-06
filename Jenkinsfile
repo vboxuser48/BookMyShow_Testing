@@ -12,7 +12,7 @@ pipeline {
     stage('Build & Test') {
       steps {
         script {
-          // prepare host path: convert Windows "C:\..." -> "/c/..." for Docker Desktop Linux backend
+          // convert Windows "C:\path\to\ws" -> "/c/path/to/ws" for Docker Desktop
           def hostPath = env.WORKSPACE
           if (!isUnix()) {
             hostPath = hostPath.replaceAll('\\\\','/')
@@ -22,13 +22,17 @@ pipeline {
             }
           }
 
-          // mount workspace into container but DON'T pass -w (avoid plugin adding conflicting -w)
-          def dockerArgs = "-v ${hostPath}:/workspace"
+          echo "Converted hostPath for docker: ${hostPath}"
 
-          docker.image('maven:3.9.6-eclipse-temurin-17').inside(dockerArgs) {
-            // change into mounted workspace inside the container, then run maven
-            sh 'cd /workspace && mvn clean test'
-            echo "Code executed in docker"
+          // Temporarily override WORKSPACE so the docker plugin will inject a Linux-style -w
+          withEnv(["WORKSPACE=${hostPath}"]) {
+            // mount workspace into container (plugin will also add -w using WORKSPACE)
+            def dockerArgs = "-v ${hostPath}:/workspace"
+            docker.image('maven:3.9.6-eclipse-temurin-17').inside(dockerArgs) {
+              // run inside container; use /workspace which is the mounted dir
+              sh 'cd /workspace && mvn clean test'
+              echo "Code executed in docker"
+            }
           }
         }
       }
