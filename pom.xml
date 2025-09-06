@@ -14,14 +14,12 @@
     </properties>
 
     <dependencies>
-        <!-- ✅ Selenium -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <version>4.23.0</version>
         </dependency>
 
-        <!-- ✅ TestNG (scoped to test only) -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -29,7 +27,6 @@
 
         </dependency>
 
-        <!-- ✅ WebDriverManager -->
         <dependency>
             <groupId>io.github.bonigarcia</groupId>
             <artifactId>webdrivermanager</artifactId>
