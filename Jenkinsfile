@@ -23,9 +23,9 @@ pipeline {
                     }
                     echo "Using hostPath for docker: ${hostPath}"
 
-                    // Run Maven tests inside Maven+Chrome container
+                    // Run Maven tests inside Maven+Chrome container (with root user for file permissions)
                     bat """
-                      docker run --rm -v ${hostPath}:/workspace -w /workspace markhobson/maven-chrome mvn -B clean test
+                      docker run --rm -u 0:0 -v ${hostPath}:/workspace -w /workspace markhobson/maven-chrome mvn -B clean test
                     """
                 }
             }
@@ -33,13 +33,16 @@ pipeline {
 
         stage('Report') {
             steps {
+                // Surefire test reports
                 junit 'target/surefire-reports/*.xml'
+
+                // Extent report publishing (adjust if Extent writes to test-output instead of target)
                 publishHTML([
                     allowMissing: false,
                     alwaysLinkToLastBuild: true,
                     keepAll: true,
-                    reportDir: 'target',
-                    reportFiles: 'ExtentReport.html',
+                    reportDir: 'test-output',
+                    reportFiles: 'Report.html',
                     reportName: 'Extent Report'
                 ])
             }
